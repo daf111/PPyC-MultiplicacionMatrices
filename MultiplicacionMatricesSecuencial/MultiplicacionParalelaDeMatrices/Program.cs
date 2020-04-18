@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MultiplicacionMatricesSecuencial
+namespace MultiplicacionParalelaDeMatrices
 {
     class Program
     {
@@ -26,7 +26,6 @@ namespace MultiplicacionMatricesSecuencial
 
         static void Main(string[] args)
         {
-            int respuesta = 0;
 
             int r1 = 900;
             int c1 = 400;
@@ -44,18 +43,30 @@ namespace MultiplicacionMatricesSecuencial
 
                 int[,] matrixResponse = new int[r1, c2];
 
+                List<Task> tareas = new List<Task>();
+
                 for (int i = 0; i < r1; i++)
                 {
-                    for (int j = 0; j < c2; j++)
+                    Task t = Task.Factory.StartNew((parametro) =>
                     {
-                        for (int k = 0; k < c1; k++)
+                        int indice = (int)parametro;
+
+                        for (int j = 0; j < c2; j++)
                         {
-                            respuesta += matrix1[i, k] * matrix2[k, j];
+                            int respuesta = 0;
+                            for (int k = 0; k < c1; k++)
+                            {
+                                respuesta += matrix1[indice, k] * matrix2[k, j];
+                            }
+                            matrixResponse[indice, j] = respuesta;
+                            respuesta = 0;
                         }
-                        matrixResponse[i, j] = respuesta;
-                        respuesta = 0;
-                    }
+                    }, i);
+
+                    tareas.Add(t);
                 }
+
+                Task.WaitAll(tareas.ToArray());
 
                 sw.Stop();
 
@@ -71,9 +82,8 @@ namespace MultiplicacionMatricesSecuencial
                     igual = "";
                 }
 
-                Console.WriteLine("El programa demoró " + (sw.ElapsedMilliseconds / 1000) + " seg.");
+                Console.WriteLine("El programa demoró " + (sw.ElapsedMilliseconds / 1000) + " segundo.");
                 Console.Read();
-
             }
             else
             {
