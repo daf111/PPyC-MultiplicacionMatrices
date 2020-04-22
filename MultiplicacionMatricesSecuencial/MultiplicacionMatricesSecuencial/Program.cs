@@ -13,58 +13,49 @@ namespace MultiplicacionMatricesSecuencial
 
         static void Main(string[] args)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            try
+            Matriz mat1 = new Matriz(2, 3);
+            Matriz mat2 = new Matriz(3, 2);
+            if (mat1.EsMultiplicablePor(mat2))
             {
-                Matriz m1 = new Matriz(2, 3);
-                Matriz m2 = new Matriz(3, 2);
-
-                Task t1 = new Task(() =>
+                var m1 = Task.Factory.StartNew(() =>
                 {
-                    m1.Cargar();
+                    mat1.Cargar();
+                    mat2.Cargar();
+                    return new Matriz[] { mat1, mat2 };
+                });
+                var m2 = m1.ContinueWith((predecesora) =>
+                {
+                    Console.WriteLine("Matriz 1 : ");
+                    predecesora.Result[0].Mostrar();
+                    Console.WriteLine("Matriz 2 : ");
+                    predecesora.Result[1].Mostrar();
+
+                    return predecesora.Result;
+                });
+                var m3 = m2.ContinueWith((predecesora) =>
+                {
+
+                    var resultado = predecesora.Result[0].MultiplicarPor(predecesora.Result[1]);
+                    return resultado;
+                });
+                var m4 = m3.ContinueWith((predecesora) =>
+                {
+
+                    Console.WriteLine("el resultado es : ");
+                    predecesora.Result.Mostrar();
 
                 });
-                Task t2 = new Task(() =>
-                {
-                    m2.Cargar();
-
-                });
-                Task t3 = new Task(() =>
-                {
-                    Console.WriteLine("Matriz A");
-                    m1.Mostrar();
-                    Console.WriteLine("\nMatriz B");
-                    m2.Mostrar();
-
-                });
-
-                Task t4 = new Task(() =>
-                {
-                    Console.WriteLine("\nResultado");
-                    m1.Multiplicar(m2).Mostrar();
-                });
-
-
-                t1.Start();
-                t2.Start();
-                Task.WaitAll(t1, t2);
-
-                t3.Start();
-                t3.Wait();
-
-                t4.Start();
-                t4.Wait();
-
+                Task[] tasks = new Task[] { m1, m2, m3, m4 };
+                Task.WaitAll(tasks);
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine(e.Message);
+                throw new Exception("esas matrices no se pueden multiplicar");
             }
 
-            sw.Stop();
-            Console.WriteLine("El programa demoró " + (sw.ElapsedMilliseconds / 1000) + " seg.");
-            Console.WriteLine("Presione enter para finalizar");
+
+            Console.WriteLine("ejercicio terminado");
+            Console.WriteLine("precione una tecla para salir");
             Console.ReadLine();
 
         }
