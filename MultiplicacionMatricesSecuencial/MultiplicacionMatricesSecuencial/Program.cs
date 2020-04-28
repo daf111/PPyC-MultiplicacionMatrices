@@ -9,76 +9,54 @@ namespace MultiplicacionMatricesSecuencial
 {
     class Program
     {
-        static int[,] generateMatrix(int rows, int columns)
-        {
-            Random random = new Random();
-            int[,] matrix = new int[rows, columns]; //Matriz de 3 filas x 2 columnas
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 0; c < columns; c++)
-                {
-                    matrix[r, c] = random.Next(1, 100); ;
-                }
-            }
-
-            return matrix;
-        }
+    
 
         static void Main(string[] args)
         {
-            int respuesta = 0;
-
-            int r1 = 900;
-            int c1 = 400;
-            int[,] matrix1 = generateMatrix(r1, c1); //Matriz de 3 filas x 2 columnas
-
-            int r2 = 400;
-            int c2 = 900;
-            int[,] matrix2 = generateMatrix(r2, c2); //Matriz de 2 filas x 3 columnas
-
-            if (c1 == r2) //Si el numero de columnas de la 1 es igual al numero de filas de la 2
+            Matriz mat1 = new Matriz(2, 3);
+            Matriz mat2 = new Matriz(3, 2);
+            if (mat1.EsMultiplicablePor(mat2))
             {
-
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
-
-                int[,] matrixResponse = new int[r1, c2];
-
-                for (int i = 0; i < r1; i++)
+                var m1 = Task.Factory.StartNew(() =>
                 {
-                    for (int j = 0; j < c2; j++)
-                    {
-                        for (int k = 0; k < c1; k++)
-                        {
-                            respuesta += matrix1[i, k] * matrix2[k, j];
-                        }
-                        matrixResponse[i, j] = respuesta;
-                        respuesta = 0;
-                    }
-                }
-
-                sw.Stop();
-
-                Console.WriteLine("LA RESPUESTA ES: ");
-                string igual = "";
-                for (int i = 0; i < r1; i++)
+                    mat1.Cargar();
+                    mat2.Cargar();
+                    return new Matriz[] { mat1, mat2 };
+                });
+                var m2 = m1.ContinueWith((predecesora) =>
                 {
-                    for (int j = 0; j < c2; j++)
-                    {
-                        igual = igual + (matrixResponse[i, j].ToString()) + "  ";
-                    }
-                    Console.WriteLine("[  " + igual + "]");
-                    igual = "";
-                }
+                    Console.WriteLine("Matriz 1 : ");
+                    predecesora.Result[0].Mostrar();
+                    Console.WriteLine("Matriz 2 : ");
+                    predecesora.Result[1].Mostrar();
 
-                Console.WriteLine("El programa demoró " + (sw.ElapsedMilliseconds / 1000) + "seg.");
+                    return predecesora.Result;
+                });
+                var m3 = m2.ContinueWith((predecesora) =>
+                {
 
+                    var resultado = predecesora.Result[0].MultiplicarPor(predecesora.Result[1]);
+                    return resultado;
+                });
+                var m4 = m3.ContinueWith((predecesora) =>
+                {
+
+                    Console.WriteLine("el resultado es : ");
+                    predecesora.Result.Mostrar();
+
+                });
+                Task[] tasks = new Task[] { m1, m2, m3, m4 };
+                Task.WaitAll(tasks);
             }
             else
             {
-                Console.WriteLine("No se puede multiplicar estas matrices");
-                Console.Read();
+                throw new Exception("esas matrices no se pueden multiplicar");
             }
+
+
+            Console.WriteLine("ejercicio terminado");
+            Console.WriteLine("precione una tecla para salir");
+            Console.ReadLine();
 
         }
     }
